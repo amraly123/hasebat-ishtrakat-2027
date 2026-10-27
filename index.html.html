@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حاسبة اشتراك مشروع العلاج 2027</title>
+<style>
+  :root {
+    --primary: #1d4e89;
+    --primary-soft: rgba(29,78,137,.10);
+    --accent: #e0a100;
+    --danger: #c62828;
+    --success: #2e7d32;
+    --bg: #f3f5f9;
+    --surface: #ffffff;
+    --text: #1b2430;
+    --muted: #6b7280;
+    --border: #e3e7ee;
+    --shadow: 0 6px 24px rgba(15,23,42,.06);
+    --radius: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --primary: #60a5fa; --primary-soft: rgba(96,165,250,.14);
+      --bg: #0b1220; --surface: #141d2e; --text: #e6ebf3;
+      --muted: #9aa6b8; --border: #26324a; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --primary: #60a5fa; --primary-soft: rgba(96,165,250,.14);
+    --bg: #0b1220; --surface: #141d2e; --text: #e6ebf3;
+    --muted: #9aa6b8; --border: #26324a; --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; font-family: "Segoe UI", Tahoma, "Noto Naskh Arabic", Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+    padding: env(safe-area-inset-top, 0px) 14px env(safe-area-inset-bottom, 0px);
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 0 40px; }
+
+  /* Header */
+  .hero {
+    background: linear-gradient(135deg, var(--primary), #0f2f57);
+    color: #fff; border-radius: var(--radius); padding: 22px 20px; margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .hero h1 { margin: 0 0 4px; font-size: 1.45rem; }
+  .hero p { margin: 0; opacity: .85; font-size: .95rem; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .card h2 {
+    margin: 0 0 14px; font-size: 1.05rem; color: var(--primary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .step {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--primary);
+    color: #fff; font-size: .85rem; display: inline-grid; place-items: center; flex-shrink: 0;
+  }
+
+  /* Segmented control */
+  .seg {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px;
+    background: var(--bg); border-radius: 12px; border: 1px solid var(--border);
+  }
+  .seg label {
+    text-align: center; padding: 10px; border-radius: 9px; cursor: pointer;
+    font-weight: 600; color: var(--muted); transition: .2s;
+  }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label.on { background: var(--surface); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+
+  .pane { display: none; margin-top: 14px; }
+  .pane.show { display: block; animation: fade .25s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  select, input[type="number"] {
+    width: 100%; padding: 12px 14px; border-radius: 10px; font-size: 1rem;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    font-family: inherit;
+  }
+  select:focus, input:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .hint { color: var(--muted); font-size: .85rem; margin-top: 6px; }
+  .err { color: var(--danger); font-size: .85rem; margin-top: 6px; min-height: 1.2em; }
+
+  .bracket-badge {
+    margin-top: 12px; padding: 12px 14px; border-radius: 12px;
+    background: var(--primary-soft); color: var(--primary); font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .bracket-badge small { color: var(--muted); font-weight: 500; }
+
+  /* Family fields */
+  .field {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--border);
+  }
+  .field:last-child { border-bottom: none; }
+  .field .info { flex: 1; font-weight: 600; }
+  .field .info small { display: block; color: var(--muted); font-weight: 400; font-size: .85rem; }
+  .field.off { opacity: .4; pointer-events: none; }
+  .counter { display: flex; align-items: center; gap: 6px; }
+  .counter button {
+    width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 1.1rem; cursor: pointer;
+  }
+  .counter button:hover { border-color: var(--primary); color: var(--primary); }
+  .counter output { min-width: 34px; text-align: center; font-weight: 700; font-size: 1.05rem; }
+  .switch { position: relative; width: 52px; height: 30px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span {
+    position: absolute; inset: 0; background: var(--border); border-radius: 30px; transition: .2s; cursor: pointer;
+  }
+  .switch span::before {
+    content: ""; position: absolute; width: 24px; height: 24px; right: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: .2s;
+  }
+  .switch input:checked + span { background: var(--primary); }
+  .switch input:checked + span::before { transform: translateX(-22px); }
+
+  /* Result */
+  .lines { margin-bottom: 10px; }
+  .line {
+    display: flex; justify-content: space-between; gap: 10px; padding: 9px 0;
+    border-bottom: 1px solid var(--border); font-size: .95rem;
+  }
+  .line:last-child { border-bottom: none; }
+  .line .qty { color: var(--muted); font-size: .85rem; }
+  .line .amt { font-weight: 700; white-space: nowrap; }
+  .line.sub { font-weight: 700; color: var(--primary); }
+  .total {
+    margin-top: 10px; padding: 18px; border-radius: 14px; text-align: center;
+    background: linear-gradient(135deg, var(--primary), #0f2f57); color: #fff;
+  }
+  .total .label { opacity: .85; font-size: .9rem; }
+  .total .num { font-size: 2rem; font-weight: 800; letter-spacing: .5px; margin-top: 2px; }
+  .total .sub { font-size: .8rem; opacity: .75; margin-top: 4px; }
+  .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .btn {
+    flex: 1; min-width: 140px; padding: 12px; border-radius: 10px; font-size: .95rem;
+    border: 1px solid var(--primary); background: transparent; color: var(--primary);
+    cursor: pointer; font-family: inherit; font-weight: 600;
+  }
+  .btn.solid { background: var(--primary); color: #fff; }
+  .btn:active { transform: scale(.98); }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 10px;
+    transition: .3s; font-size: .9rem; opacity: 0; pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .notice {
+    border-inline-start: 4px solid var(--accent); background: rgba(224,161,0,.1);
+    border-radius: 10px; padding: 10px 14px; font-size: .88rem; margin-top: 12px;
+  }
+  footer { color: var(--muted); font-size: .8rem; text-align: center; margin-top: 18px; line-height: 1.8; }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .card, .hero { box-shadow: none; }
+    .actions, .toast, .seg, .counter button { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>حاسبة اشتراك مشروع العلاج 2027</h1>
+    <p>احسب تكلفة اشتراكك بدقة حسب مدة القيد وأفراد الأسرة</p>
+  </header>
+
+  <!-- Step 1: Duration -->
+  <section class="card">
+    <h2><span class="step">1</span> مدة القيد</h2>
+
+    <div class="seg" role="tablist">
+      <input type="radio" name="mode" id="modeYear" value="year" checked>
+      <label for="modeYear" id="lblYear" class="on">سنة القيد</label>
+      <input type="radio" name="mode" id="modeBracket" value="bracket">
+      <label for="modeBracket" id="lblBracket">الشريحة مباشرة</label>
+    </div>
+
+    <div class="pane show" id="paneYear">
+      <select id="regYear" aria-label="سنة القيد"></select>
+      <div class="err" id="yearErr"></div>
+      <div class="hint">اختار سنة القيد، والصفحة هتحدد الشريحة تلقائياً.</div>
+    </div>
+
+    <div class="pane" id="paneBracket">
+      <select id="bracket" aria-label="الشريحة"></select>
+      <div class="hint">اختار الشريحة اللي بتنطبق عليك من الجدول.</div>
+    </div>
+
+    <div class="bracket-badge" id="badge"></div>
+
+    <div class="field" style="margin-top:10px; border-bottom:none">
+      <div class="info">أرمل / معاش<small>لو تنطبق عليك حالة أرامل والمعاشات، الشريحة هتتحدد تلقائياً</small></div>
+      <label class="switch"><input type="checkbox" id="widow"><span></span></label>
+    </div>
+  </section>
+
+  <!-- Step 2: Family -->
+  <section class="card">
+    <h2><span class="step">2</span> أفراد الأسرة المشتركين معك</h2>
+
+    <div class="field">
+      <div class="info">الزوج / الزوجة<small>سعر ثابت حسب الشريحة</small></div>
+      <label class="switch"><input type="checkbox" id="spouse"><span></span></label>
+    </div>
+
+    <div class="field">
+      <div class="info">أحد الأبناء<small>الأبناء غير المتخرجين</small></div>
+      <div class="counter" data-target="children">
+        <button type="button" data-d="-1" aria-label="أقل">−</button>
+        <output id="children">0</output>
+        <button type="button" data-d="1" aria-label="زيادة">+</button>
+      </div>
+    </div>
+
+    <div class="field" id="gradField">
+      <div class="info">الأبناء بعد التخرج / البنت المتزوجة<small>متاح من الشريحة الأولى فأكثر</small></div>
+      <div class="counter" data-target="grad">
+        <button type="button" data-d="-1" aria-label="أقل">−</button>
+        <output id="grad">0</output>
+        <button type="button" data-d="1" aria-label="زيادة">+</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="info">أحد الوالدين<small>الحد الأقصى 2</small></div>
+      <div class="counter" data-target="parents">
+        <button type="button" data-d="-1" aria-label="أقل">−</button>
+        <output id="parents">0</output>
+        <button type="button" data-d="1" aria-label="زيادة">+</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3: Result -->
+  <section class="card">
+    <h2><span class="step">3</span> تفاصيل التكلفة</h2>
+    <div class="lines" id="lines"></div>
+    <div class="total">
+      <div class="label">الإجمالي المستحق</div>
+      <div class="num" id="grand">0 جنيه</div>
+      <div class="sub" id="cardsInfo"></div>
+    </div>
+    <div class="actions">
+      <button class="btn solid" id="copyBtn" type="button">نسخ الملخص</button>
+      <button class="btn" id="printBtn" type="button">طباعة</button>
+    </div>
+    <div class="notice">
+      الحد الأقصى للمشترك الواحد اترفع من 55 ألف جنيه إلى 70 ألف جنيه.
+    </div>
+  </section>
+
+  <footer>
+    الأسعار والمصروفات الإدارية حسب جدول 2027. الحاسبة إرشادية، والمرجع النهائي هو الإدارة.
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const CURRENT_YEAR = 2027;
+  const MIN_YEAR = 1960;
+  const ADMIN_PER_CARD = 175;
+  const ADMIN_PER_FAMILY = 200;
+
+  // Brackets from the official 2027 table
+  const BRACKETS = [
+    { name: "الدفعات الجديدة",   self: 400, spouse: 880,  child: 550, grad: null, parent: 1155 },
+    { name: "من 1 إلى 5 سنوات",  self: 660, spouse: 880,  child: 550, grad: 1320, parent: 1155 },
+    { name: "من 6 إلى 10 سنوات", self: 770, spouse: 1045, child: 605, grad: 1540, parent: 1320 },
+    { name: "من 11 إلى 15 سنة",  self: 825, spouse: 1100, child: 605, grad: 1650, parent: 1430 },
+    { name: "أكثر من 15 سنة",    self: 935, spouse: 1155, child: 660, grad: 1925, parent: 1540 },
+  ];
+  const WIDOW = { name: "الأرامل والمعاشات", self: 935, spouse: 1155, child: 660, grad: 1925, parent: 1540 };
+
+  const $ = id => document.getElementById(id);
+  const fmt = n => Number(n).toLocaleString("ar-EG") + " جنيه";
+  const fmtN = n => Number(n).toLocaleString("ar-EG");
+
+  const state = { mode: "year", bracketIdx: 0, regYear: 2020, widow: false, children: 0, grad: 0, parents: 0, spouse: false };
+
+  // Map registration year to bracket index
+  function bracketFromYear(year) {
+    const years = CURRENT_YEAR - year;
+    if (years <= 0) return { idx: 0, years };
+    if (years <= 5) return { idx: 1, years };
+    if (years <= 10) return { idx: 2, years };
+    if (years <= 15) return { idx: 3, years };
+    return { idx: 4, years };
+  }
+
+  function activeBracket() {
+    if (state.widow) return { plan: WIDOW, label: WIDOW.name, idx: null };
+    if (state.mode === "year") {
+      const r = bracketFromYear(state.regYear);
+      return { plan: BRACKETS[r.idx], label: BRACKETS[r.idx].name, idx: r.idx, years: r.years };
+    }
+    return { plan: BRACKETS[state.bracketIdx], label: BRACKETS[state.bracketIdx].name, idx: state.bracketIdx };
+  }
+
+  // Populate year select
+  function initYears() {
+    const sel = $("regYear");
+    let html = "";
+    for (let y = CURRENT_YEAR; y >= MIN_YEAR; y--) {
+      html += `<option value="${y}">${fmtN(y)}</option>`;
+    }
+    sel.innerHTML = html;
+    sel.value = state.regYear;
+  }
+
+  function initBrackets() {
+    $("bracket").innerHTML = BRACKETS.map((b, i) => `<option value="${i}">${b.name}</option>`).join("");
+    $("bracket").value = state.bracketIdx;
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    $("lblYear").classList.toggle("on", mode === "year");
+    $("lblBracket").classList.toggle("on", mode === "bracket");
+    $("paneYear").classList.toggle("show", mode === "year");
+    $("paneBracket").classList.toggle("show", mode === "bracket");
+    calc();
+  }
+
+  function renderBadge(b) {
+    let detail = "";
+    if (state.widow) {
+      detail = "حالة خاصة";
+    } else if (state.mode === "year") {
+      const y = b.years;
+      detail = y === 0 ? "قيد جديد" : `مدة القيد ${fmtN(y)} ${y === 1 ? "سنة" : "سنة"}`;
+    } else {
+      detail = "محددة يدوياً";
+    }
+    $("badge").innerHTML = `
+      <span>الشريحة: ${b.label}</span>
+      <small>${detail}</small>`;
+  }
+
+  function calc() {
+    const b = activeBracket();
+    const p = b.plan;
+
+    // Year validation
+    $("yearErr").textContent = "";
+    if (state.mode === "year" && state.regYear > CURRENT_YEAR) {
+      $("yearErr").textContent = "سنة القيد مش ممكن تكون بعد 2027.";
+    }
+
+    // Grad field availability
+    const gradOff = p.grad === null;
+    $("gradField").classList.toggle("off", gradOff);
+    if (gradOff) state.grad = 0;
+
+    renderBadge(b);
+
+    const hasSpouse = state.spouse ? 1 : 0;
+    const grad = gradOff ? 0 : state.grad;
+    const lines = [
+      { label: "العضو الأصلي", price: p.self, qty: 1 },
+      { label: "الزوج / الزوجة", price: p.spouse, qty: hasSpouse },
+      { label: "أحد الأبناء", price: p.child, qty: state.children },
+      { label: "الأبناء بعد التخرج / البنت المتزوجة", price: p.grad ?? 0, qty: grad },
+      { label: "أحد الوالدين", price: p.parent, qty: state.parents },
+    ];
+
+    const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
+    const cards = 1 + hasSpouse + state.children + grad + state.parents;
+    const family = cards > 1;
+    const adminCards = cards * ADMIN_PER_CARD;
+    const adminFamily = family ? ADMIN_PER_FAMILY : 0;
+    const admin = adminCards + adminFamily;
+    const total = subtotal + admin;
+
+    const rows = lines.filter(l => l.qty > 0).map(l => `
+      <div class="line">
+        <span>${l.label} <span class="qty">× ${fmtN(l.qty)}</span></span>
+        <span class="amt">${fmt(l.price * l.qty)}</span>
+      </div>`).join("");
+
+    $("lines").innerHTML = `
+      ${rows}
+      <div class="line"><span>مصروفات إدارية (${fmtN(cards)} بطاقة × ${fmtN(ADMIN_PER_CARD)})</span><span class="amt">${fmt(adminCards)}</span></div>
+      ${family ? `<div class="line"><span>مصروفات إدارية للأسرة</span><span class="amt">${fmt(adminFamily)}</span></div>` : ""}
+      <div class="line sub"><span>إجمالي الاشتراكات</span><span class="amt">${fmt(subtotal)}</span></div>
+    `;
+    $("grand").textContent = fmt(total);
+    $("cardsInfo").textContent = `${fmtN(cards)} ${cards === 1 ? "فرد" : "أفراد"} · ${b.label}`;
+  }
+
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(t._h);
+    t._h = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+
+  function summaryText() {
+    const b = activeBracket();
+    const lines = [
+      `حاسبة اشتراك مشروع العلاج 2027`,
+      `الشريحة: ${b.label}`,
+      `الإجمالي: ${$("grand").textContent}`,
+      `عدد البطاقات: ${$("cardsInfo").textContent.split("·")[0].trim()}`
+    ];
+    return lines.join("\n");
+  }
+
+  // Events
+  $("modeYear").addEventListener("change", () => setMode("year"));
+  $("modeBracket").addEventListener("change", () => setMode("bracket"));
+  $("regYear").addEventListener("change", e => { state.regYear = Number(e.target.value); calc(); });
+  $("bracket").addEventListener("change", e => { state.bracketIdx = Number(e.target.value); calc(); });
+  $("widow").addEventListener("change", e => { state.widow = e.target.checked; calc(); });
+  $("spouse").addEventListener("change", e => { state.spouse = e.target.checked; calc(); });
+
+  document.querySelectorAll(".counter").forEach(c => {
+    const target = c.dataset.target;
+    const max = target === "parents" ? 2 : 20;
+    c.addEventListener("click", e => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const next = Math.min(max, Math.max(0, state[target] + Number(btn.dataset.d)));
+      state[target] = next;
+      $(target).textContent = fmtN(next);
+      calc();
+    });
+  });
+
+  $("copyBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(summaryText());
+      toast("تم نسخ الملخص ✓");
+    } catch {
+      toast("تعذر النسخ على هذا الجهاز");
+    }
+  });
+
+  $("printBtn").addEventListener("click", () => {
+    try { window.print(); } catch { toast("الطباعة غير متاحة هنا"); }
+  });
+
+  // Init
+  initYears();
+  initBrackets();
+  calc();
+})();
+</script>
+</body>
+</html>
